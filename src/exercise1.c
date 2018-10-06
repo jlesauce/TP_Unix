@@ -40,29 +40,40 @@
 
 typedef void (*sighandler_t)(int);
 
-void sigIntHandler(int receivedSignal);
-
+void registerToSignal(int signalToHandle, sighandler_t signalHandler);
+void printLoop();
+void handleSignal(int receivedSignal);
 
 int main(void)
 {
-    sighandler_t returnedSignal = signal(SIGINT, sigIntHandler);
-    if (returnedSignal == SIG_ERR)
-    {
-        perror("Signal function failed\n");
-        return EXIT_FAILURE;
-    }
+    registerToSignal(SIGINT, handleSignal);
+    printLoop();
 
+    return EXIT_SUCCESS;
+}
+
+void registerToSignal(int signalToHandle, sighandler_t signalHandler)
+{
+    sighandler_t returnedSignal = signal(signalToHandle, signalHandler);
+    if(returnedSignal == SIG_ERR)
+    {
+        printf("Signal function failed for signal: %d\n", signalToHandle);
+        return;
+    }
+}
+
+void printLoop()
+{
     for(int index = 0; index < 30; ++index)
     {
         printf("%d\n", index);
         sleep(1);
     }
-
-    return EXIT_SUCCESS;
 }
 
-void sigIntHandler(int receivedSignal) {
-    (void) receivedSignal;
+void handleSignal(int receivedSignal)
+{
+    (void)receivedSignal;
     printf("Olé!\n");
 }
 

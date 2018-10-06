@@ -35,11 +35,54 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <signal.h>
+#include <string.h>
+
+#define TRUE  1
+#define FALSE 0
+
+typedef void (*sighandler_t)(int);
+
+void registerToAllSignals();
+void registerToSignal(int signalToHandle, sighandler_t signalHandler);
+void handleSignal(int receivedSignal);
 
 int main(void)
 {
-    puts("Exercise2");
+    registerToAllSignals();
 
-    return EXIT_SUCCESS;
+    while(TRUE) // Use 'kill -9 <pid>" to kill this program
+    {
+        pause();
+    }
+}
+
+void registerToAllSignals()
+{
+    for(int signal = SIGHUP; signal <= SIGUNUSED; ++signal)
+    {
+        // Ignore SIGKILL and SIGSTOP signals
+        if(signal == SIGKILL || signal == SIGSTOP)
+        {
+            continue;
+        }
+        registerToSignal(signal, handleSignal);
+    }
+}
+
+void registerToSignal(int signalToHandle, sighandler_t signalHandler)
+{
+    sighandler_t returnedSignal = signal(signalToHandle, signalHandler);
+    if(returnedSignal == SIG_ERR)
+    {
+        printf("Signal function failed for signal: %d\n", signalToHandle);
+        return;
+    }
+}
+
+void handleSignal(int receivedSignal)
+{
+    printf("Received signal %s(%d) (pid=%d)\n", strsignal(receivedSignal), receivedSignal, getpid());
 }
 
