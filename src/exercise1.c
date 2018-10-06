@@ -35,11 +35,34 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <signal.h>
+
+typedef void (*sighandler_t)(int);
+
+void sigIntHandler(int receivedSignal);
+
 
 int main(void)
 {
-    puts("Exercise1");
+    sighandler_t returnedSignal = signal(SIGINT, sigIntHandler);
+    if (returnedSignal == SIG_ERR)
+    {
+        perror("Signal function failed\n");
+        return EXIT_FAILURE;
+    }
+
+    for(int index = 0; index < 30; ++index)
+    {
+        printf("%d\n", index);
+        sleep(1);
+    }
 
     return EXIT_SUCCESS;
+}
+
+void sigIntHandler(int receivedSignal) {
+    (void) receivedSignal;
+    printf("Olé!\n");
 }
 
