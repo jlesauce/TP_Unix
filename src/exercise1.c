@@ -35,8 +35,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <signal.h>
+#include <unistd.h>     // sleep
+#include <signal.h>     // signal
 
 typedef void (*sighandler_t)(int);
 

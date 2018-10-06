@@ -23,34 +23,109 @@
  *
  * ----------------------------------------------------------------------------
  *  FILE        |   Project         : TP_Unix
- *              |   Filename        : exercise2.1.c
- *              |   Created on      : Oct 5, 2018
+ *              |   Filename        : exercise2.2.c
+ *              |   Created on      : Oct 6, 2018
  *              |   Author          : Julien LE SAUCE
  * ----------------------------------------------------------------------------
  * DESCRIPTION
  *
- *  TP Unix - Chapter 1 - Exercise 2 (Part 1)
+ *  TP Unix - Chapter 1 - Exercise 2 (Part 2)
  *
  */
 
 #include <stdio.h>
 #include <stdlib.h>     // srand
-#include <unistd.h>     // sleep, pause, getpid
+#include <unistd.h>     // sleep, pause, fork, getpid
 #include <signal.h>     // signal, kill
 #include <string.h>     // strsignal
+#include <sys/types.h>  // getpid
+#include <time.h>       // time
 
 #define TRUE  1
 #define FALSE 0
 
 typedef void (*sighandler_t)(int);
 
+void executeChildProcess(pid_t parentPid);
+void sendRandomSignalToParentProcess(pid_t parentPid);
+void sendSignalToParentProcess(pid_t parentPid, int signal);
+int getRandomSignal();
+void executeParentProcess();
 void registerToAllSignals();
+void unregisterAllSignals();
 void registerToSignal(int signalToHandle, sighandler_t signalHandler);
 void handleSignal(int receivedSignal);
 
 int main(void)
 {
+    srand(time(NULL));
+
+    pid_t parentPid = getpid();
+    printf("Parent PID = %d\n", parentPid);
+
     registerToAllSignals();
+
+    pid_t childPid = fork();
+    if(childPid == 0)
+    {
+        executeChildProcess(parentPid);
+    }
+    else if(childPid > 0)
+    {
+        executeParentProcess();
+    }
+    else
+    {
+        perror("Child process creation failed:");
+    }
+
+    return EXIT_SUCCESS;
+}
+
+void executeChildProcess(pid_t parentPid)
+{
+    printf("Hello from child, pid=%d\n", getpid());
+    unregisterAllSignals();
+
+    for(int ellapsedSeconds = 0; ellapsedSeconds < 50; ++ellapsedSeconds)
+    {
+        sendRandomSignalToParentProcess(parentPid);
+        sleep(1);
+    }
+
+    sendSignalToParentProcess(parentPid, SIGKILL);
+}
+
+void sendRandomSignalToParentProcess(pid_t parentPid)
+{
+    sendSignalToParentProcess(parentPid, getRandomSignal());
+}
+
+void sendSignalToParentProcess(pid_t parentPid, int signal)
+{
+    int rc = kill(parentPid, signal);
+    if(rc < 0)
+    {
+        perror("kill function failed:");
+    }
+}
+
+int getRandomSignal()
+{
+    int signal = SIGHUP + (rand() % SIGUNUSED);
+
+    // Ignore SIGKILL and SIGSTOP signals
+    if(signal == SIGKILL || signal == SIGSTOP)
+    {
+        signal++;
+    }
+
+    return signal;
+}
+
+void executeParentProcess()
+{
+    printf("Hello from parent, pid=%d\n", getpid());
 
     while(TRUE) // Use 'kill -9 <pid>" to kill this program
     {
@@ -68,6 +143,19 @@ void registerToAllSignals()
             continue;
         }
         registerToSignal(signal, handleSignal);
+    }
+}
+
+void unregisterAllSignals()
+{
+    for(int signalNumber = SIGHUP; signalNumber <= SIGUNUSED; ++signalNumber)
+    {
+        // Ignore SIGKILL and SIGSTOP signals
+        if(signalNumber == SIGKILL || signalNumber == SIGSTOP)
+        {
+            continue;
+        }
+        signal(signalNumber, SIG_DFL);
     }
 }
 
