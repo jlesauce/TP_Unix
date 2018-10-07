@@ -24,7 +24,7 @@ EXTRA_CFLAGS   += -Wextra -Wshadow
 
 .PHONY: clean debug
 
-all: exercise1 exercise2.1 exercise2.2 exercise3 exercise4
+all: exercise1 exercise2.1 exercise2.2 exercise3 exercise4 exercise5
 
 %: $(OBJDIR)/%.o
 	@echo "# Generate $(BINDIR)/$@"

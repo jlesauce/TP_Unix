@@ -23,13 +23,13 @@
  *
  * ----------------------------------------------------------------------------
  *  FILE        |   Project         : TP_Unix
- *              |   Filename        : exercise4.1.c
+ *              |   Filename        : exercise4.c
  *              |   Created on      : Oct 6, 2018
  *              |   Author          : Julien LE SAUCE
  * ----------------------------------------------------------------------------
  * DESCRIPTION
  *
- *  TP Unix - Chapter 1 - Exercise 4 (Part 1)
+ *  TP Unix - Chapter 1 - Exercise 4
  *
  *  Use "kill -s SIGUSR1 <child_pid>" to end this program
  *

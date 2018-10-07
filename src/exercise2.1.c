@@ -31,6 +31,8 @@
  *
  *  TP Unix - Chapter 1 - Exercise 2 (Part 1)
  *
+ *  Use 'kill -9 <pid>" to kill this program
+ *
  */
 
 #include <stdio.h>
