@@ -27,7 +27,7 @@ EXTRA_CFLAGS   += -Wextra -Wshadow
 all: chapter1 chapter2
 
 chapter1: exercise01 exercise02.1 exercise02.2 exercise03 exercise04 exercise05 exercise06
-chapter2: exercise07 exercise08 exercise09 exercise10
+chapter2: exercise07 exercise08 exercise09 exercise10 exercise11 exercise12 exercise13.1 exercise13.2
 
 %: $(OBJDIR)/%.o
 	@echo "# Generate $(BINDIR)/$@"

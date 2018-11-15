@@ -23,13 +23,15 @@
  *
  * ----------------------------------------------------------------------------
  *  FILE        |   Project         : TP_Unix
- *              |   Filename        : exercise9.c
+ *              |   Filename        : exercise12.c
  *              |   Created on      : Nov 15, 2018
  *              |   Author          : Julien LE SAUCE
  * ----------------------------------------------------------------------------
  * DESCRIPTION
  *
- *  TP Unix - Chapter 2 - Exercise 9
+ *  TP Unix - Chapter 2 - Exercise 12
+ *
+ *  Command : ./bin/exercise12 ls / grep in wc -l
  *
  */
 
@@ -39,21 +41,42 @@
 #include <string.h>     // strlen
 #include <sys/wait.h>   // wait
 
-char g_inputString[100] = "Hello World, this is amazing!";
 int g_pipe0[2] = { 0 }; // read / write pipe
+int g_pipe1[2] = { 0 }; // read / write pipe
+
+char* g_cmd0[3] = { NULL };
+char* g_cmd1[3] = { NULL };
+char* g_cmd2[3] = { NULL };
 
 void executeChildProcess(pid_t parentPid, int childID);
 void executeParentProcess(pid_t childPid);
 
-int main(void)
+int main(int argc, char* argv[])
 {
+    (void) argc;
+    g_cmd0[0] = argv[1];
+    g_cmd0[1] = argv[2];
+    g_cmd0[2] = NULL;
+    g_cmd1[0] = argv[3];
+    g_cmd1[1] = argv[4];
+    g_cmd1[2] = NULL;
+    g_cmd2[0] = argv[5];
+    g_cmd2[1] = argv[6];
+    g_cmd2[2] = NULL;
+
     /*
-     * Create pipe
+     * Create pipes
      */
     int rc = pipe(g_pipe0);
     if(rc)
     {
-        printf("ERROR: Failed to create pipe");
+        printf("ERROR: Failed to create pipe 0");
+        return EXIT_FAILURE;
+    }
+    rc = pipe(g_pipe1);
+    if(rc)
+    {
+        printf("ERROR: Failed to create pipe 1");
         return EXIT_FAILURE;
     }
 
@@ -80,7 +103,22 @@ int main(void)
         }
         else if(childPid > 0)
         {
-            executeParentProcess(childPid);
+            /*
+             * Re-re-fork
+             */
+            childPid = fork();
+            if(childPid == 0)
+            {
+                executeChildProcess(parentPid, 2);
+            }
+            else if(childPid > 0)
+            {
+                executeParentProcess(childPid);
+            }
+            else
+            {
+                perror("Child process creation failed:");
+            }
         }
         else
         {
@@ -99,38 +137,54 @@ void executeParentProcess(pid_t childPid)
 {
     (void)childPid;
     printf("Hello from parent, pid=%d\n", getpid());
-
-    close(g_pipe0[0]); // Close reading end of pipe
-
-    sleep(3);
-
-    // Write input string and close writing end of pipe
-    write(g_pipe0[1], g_inputString, strlen(g_inputString) + 1);
+    close(g_pipe0[0]);
     close(g_pipe0[1]);
-
-    pid_t wpid = 0;
-    int status = 0;
-    while((wpid = wait(&status)) > 0)
-    {
-        printf("Child %d terminated\n", (int)wpid);
-    }
+    close(g_pipe1[0]);
+    close(g_pipe1[1]);
+    wait(NULL);
+    wait(NULL);
+    wait(NULL);
     printf("Goodbye from parent\n");
 }
 
 void executeChildProcess(pid_t parentPid, int childID)
 {
-    printf("Hello from child, pid=%d, parent_pid=%d\n", getpid(), parentPid);
+    printf("Hello from child(%d), pid=%d, parent_pid=%d\n", childID, getpid(), parentPid);
 
-    close(g_pipe0[1]); // Close writing end of pipe
-
-    // Read char by char using pipe
-    char readChar = 0;
-    while(read(g_pipe0[0], &readChar, 1) > 0)
+    if(childID == 0)
     {
-        printf("Child_%d: Received char: <%s>\n", childID, &readChar);
+        close(g_pipe0[0]); // Close reading end of pipe 0
+
+        dup2(g_pipe0[1], STDOUT_FILENO); // stdout >> writes in pipe0
+        close(g_pipe1[0]);
+        close(g_pipe1[1]);
+
+        execvp(g_cmd0[0], g_cmd0); // output ls / >> output writes in pipe0
+
+        printf("Child0: Goodbye from child, pid=%d\n", getpid());
     }
+    else if(childID == 1)
+    {
+        dup2(g_pipe0[0], STDIN_FILENO); // reads pipe0 and injects into stdin of cmd1
+        close(g_pipe0[1]);
+        close(g_pipe1[0]);
 
-    close(g_pipe0[0]); // Close reading end of pipe
-    printf("Goodbye from child, pid=%d\n", getpid());
+        dup2(g_pipe1[1], STDOUT_FILENO); // stdout >> writes in pipe1
+        execvp(g_cmd1[0], g_cmd1); // output grep in >> output writes in pipe1
+
+        printf("Child1: Goodbye from child, pid=%d\n", getpid());
+    }
+    else
+    {
+        close(g_pipe0[0]);
+        close(g_pipe0[1]);
+
+        dup2(g_pipe1[0], STDIN_FILENO); // reads pipe1 and injects into stdin of cmd2
+
+        close(g_pipe1[1]);
+
+        execvp(g_cmd2[0], g_cmd2); // executes wc -l on pipe1 input
+
+        printf("Child2: Goodbye from child, pid=%d\n", getpid());
+    }
 }
-

@@ -23,13 +23,13 @@
  *
  * ----------------------------------------------------------------------------
  *  FILE        |   Project         : TP_Unix
- *              |   Filename        : exercise9.c
+ *              |   Filename        : exercise11.c
  *              |   Created on      : Nov 15, 2018
  *              |   Author          : Julien LE SAUCE
  * ----------------------------------------------------------------------------
  * DESCRIPTION
  *
- *  TP Unix - Chapter 2 - Exercise 9
+ *  TP Unix - Chapter 2 - Exercise 11
  *
  */
 
@@ -42,7 +42,7 @@
 char g_inputString[100] = "Hello World, this is amazing!";
 int g_pipe0[2] = { 0 }; // read / write pipe
 
-void executeChildProcess(pid_t parentPid, int childID);
+void executeChildProcess(pid_t parentPid);
 void executeParentProcess(pid_t childPid);
 
 int main(void)
@@ -66,26 +66,11 @@ int main(void)
     pid_t childPid = fork();
     if(childPid == 0)
     {
-        executeChildProcess(parentPid, 0);
+        executeChildProcess(parentPid);
     }
     else if(childPid > 0)
     {
-        /*
-         * Re-fork
-         */
-        childPid = fork();
-        if(childPid == 0)
-        {
-            executeChildProcess(parentPid, 1);
-        }
-        else if(childPid > 0)
-        {
-            executeParentProcess(childPid);
-        }
-        else
-        {
-            perror("Child process creation failed:");
-        }
+        executeParentProcess(childPid);
     }
     else
     {
@@ -102,35 +87,32 @@ void executeParentProcess(pid_t childPid)
 
     close(g_pipe0[0]); // Close reading end of pipe
 
-    sleep(3);
+    int number = 0;
+    printf("Veuillez entrer un nombre:\n");
+    scanf("%d", &number);
 
     // Write input string and close writing end of pipe
-    write(g_pipe0[1], g_inputString, strlen(g_inputString) + 1);
+    write(g_pipe0[1], &number, sizeof(number));
     close(g_pipe0[1]);
 
-    pid_t wpid = 0;
-    int status = 0;
-    while((wpid = wait(&status)) > 0)
-    {
-        printf("Child %d terminated\n", (int)wpid);
-    }
-    printf("Goodbye from parent\n");
+    wait(NULL);
 }
 
-void executeChildProcess(pid_t parentPid, int childID)
+void executeChildProcess(pid_t parentPid)
 {
     printf("Hello from child, pid=%d, parent_pid=%d\n", getpid(), parentPid);
 
     close(g_pipe0[1]); // Close writing end of pipe
 
-    // Read char by char using pipe
-    char readChar = 0;
-    while(read(g_pipe0[0], &readChar, 1) > 0)
+    // Read number from parent
+    int number = 0;
+    while(read(g_pipe0[0], &number, sizeof(number)) > 0)
     {
-        printf("Child_%d: Received char: <%s>\n", childID, &readChar);
+        printf("Child: Received:%d\n", number);
     }
 
-    close(g_pipe0[0]); // Close reading end of pipe
-    printf("Goodbye from child, pid=%d\n", getpid());
-}
+    printf("Result=%d\n", number * number);
 
+    close(g_pipe0[0]); // Close reading end of pipe
+    printf("Goodbye from child\n");
+}
