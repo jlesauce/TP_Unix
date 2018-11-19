@@ -14,7 +14,7 @@ OBJECTS := $(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 
 LDINCLUDES := 
 
-LIBS       := -lpthread
+LIBS       := -lrt
 
 INCLUDES   := -I$(SRCDIR) \
 
@@ -24,10 +24,11 @@ EXTRA_CFLAGS   += -Wextra -Wshadow
 
 .PHONY: clean debug
 
-all: chapter1 chapter2
+all: chapter1 chapter2 charpter3
 
 chapter1: exercise01 exercise02.1 exercise02.2 exercise03 exercise04 exercise05 exercise06
 chapter2: exercise07 exercise08 exercise09 exercise10 exercise11 exercise12 exercise13.1 exercise13.2
+chapter3: exercise15_client exercise15_server
 
 %: $(OBJDIR)/%.o
 	@echo "# Generate $(BINDIR)/$@"
