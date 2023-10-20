@@ -1,7 +1,7 @@
 /**
  * The MIT License (MIT)
  *
- * Copyright (c) 2018 Julien LE SAUCE
+ * Copyright (c) 2023 Julien LE SAUCE
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -23,7 +23,6 @@
  *
  * ----------------------------------------------------------------------------
  *  FILE        |   Project         : TP_Unix
- *              |   Filename        : exercise13.2.c
  *              |   Created on      : Nov 15, 2018
  *              |   Author          : Julien LE SAUCE
  * ----------------------------------------------------------------------------
